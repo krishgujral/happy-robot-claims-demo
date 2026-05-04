@@ -482,7 +482,9 @@ function DrillDown({ claim, onClose }: { claim: Claim; onClose: () => void }) {
   // If we have live data from a real call, prefer it. Otherwise:
   // - Camry uses the hardcoded supplement note (the demo's hero artifact)
   // - Other rows use a generic fallback
-  const useLive = !!live && (!!live.additional_notes || !!live.spoke_with);
+  const useLive =
+    !!live &&
+    Object.values(live).some((v) => v != null && v !== "");
 
   return (
     <div className="flex flex-col h-full">
