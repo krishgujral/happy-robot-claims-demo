@@ -227,7 +227,7 @@ const Index = () => {
     setHighlightId(claimId);
     setHighlightFading(false);
 
-    let triggerOk = false;
+    let runId: string | null = null;
     try {
       const res = await fetch(`${API_BASE}/api/trigger`, {
         method: "POST",
@@ -246,15 +246,17 @@ const Index = () => {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error || `Trigger failed (${res.status})`);
       }
-      triggerOk = true;
+      const triggerBody = await res.json();
+      runId = triggerBody?.run_id || null;
+      if (!runId) {
+        throw new Error("Trigger succeeded but no run_id returned");
+      }
     } catch (e: any) {
       toast.error(`Trigger failed: ${e.message || "unknown error"}`);
       setCallingId(null);
       setHighlightId(null);
       return;
     }
-
-    if (!triggerOk) return;
 
     // Poll for completion
     const startedAt = Date.now();
@@ -269,7 +271,7 @@ const Index = () => {
 
       try {
         const res = await fetch(
-          `${API_BASE}/api/status?claim_id=${encodeURIComponent(claimId)}`
+          `${API_BASE}/api/status?run_id=${encodeURIComponent(runId!)}`
         );
         if (!res.ok) return; // keep polling
         const body = await res.json();
