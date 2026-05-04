@@ -4,8 +4,10 @@
 // POST body: { claim_id, ro_number, shop_phone, shop_name, customer_vehicle, service_writer_name, carrier_name }
 // Response:  { run_id }                    or { error }
 
+// Note: The /hooks endpoint uses the workflow SLUG, not the UUID.
+// Slug: fj0fowqxawkk → resolved via get_workflow_details on workflow 019def82-...
 const WORKFLOW_HOOK_URL =
-  "https://workflows.platform.happyrobot.ai/hooks/019def82-9a88-7d40-9d29-1ed8e9136da3";
+  "https://workflows.platform.happyrobot.ai/hooks/fj0fowqxawkk";
 
 export const config = { runtime: "edge" };
 
@@ -20,11 +22,6 @@ export default async function handler(req: Request): Promise<Response> {
 
   if (req.method !== "POST") {
     return json({ error: "Method not allowed" }, 405);
-  }
-
-  const apiKey = process.env.HR_API_KEY;
-  if (!apiKey) {
-    return json({ error: "HR_API_KEY not configured on server" }, 500);
   }
 
   let body: Record<string, unknown>;
@@ -49,12 +46,11 @@ export default async function handler(req: Request): Promise<Response> {
     }
   }
 
-  // Fire the workflow. The hook URL accepts the trigger params directly as JSON body.
+  // Fire the workflow. The /hooks/<slug> endpoint is public — no auth header needed.
   const hrRes = await fetch(WORKFLOW_HOOK_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify(body),
   });
