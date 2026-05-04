@@ -25,6 +25,7 @@ export default async function handler(req: Request): Promise<Response> {
 
   const url = new URL(req.url);
   const runId = url.searchParams.get("run_id");
+  const debug = url.searchParams.get("debug") === "1";
   if (!runId) {
     return json({ error: "Missing run_id query param" }, 400);
   }
@@ -79,9 +80,11 @@ export default async function handler(req: Request): Promise<Response> {
     );
   }
 
-  // 3. Extract done — fetch its full output payload
+  // 3. Extract done — fetch its full output payload.
+  // Confirmed shape: outBody.data.data.response = { checked_in: "true", parts_status: "all_in", ... }
   const extractOutputId = extractNode.output_id || extractNode.id;
   let extracted: Record<string, unknown> | null = null;
+  let extractDebug: unknown = null;
   if (extractOutputId) {
     const outRes = await fetch(
       `${API_BASE}/runs/${runId}/outputs/${extractOutputId}`,
@@ -89,13 +92,14 @@ export default async function handler(req: Request): Promise<Response> {
     );
     if (outRes.ok) {
       const outBody = await outRes.json();
+      if (debug) extractDebug = outBody;
       const rawExtracted =
+        outBody?.data?.data?.response ||
         outBody?.response ||
         outBody?.data?.response ||
         outBody?.output?.response ||
         outBody?.payload?.response ||
-        outBody?.data ||
-        outBody;
+        null;
       extracted = coerceExtracted(rawExtracted);
     }
   }
@@ -123,10 +127,21 @@ export default async function handler(req: Request): Promise<Response> {
     }
   }
 
-  return json(
-    { state: "complete", run_id: runId, extracted, call_meta: callMeta },
-    200
-  );
+  const payload: Record<string, unknown> = {
+    state: "complete",
+    run_id: runId,
+    extracted,
+    call_meta: callMeta,
+  };
+  if (debug) {
+    payload.debug = {
+      run: run,
+      nodes: nodes,
+      extract_output_id: extractOutputId,
+      extract_output_raw: extractDebug,
+    };
+  }
+  return json(payload, 200);
 }
 
 function json(payload: unknown, status: number): Response {

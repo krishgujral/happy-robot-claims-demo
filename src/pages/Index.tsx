@@ -21,7 +21,7 @@ const POLL_TIMEOUT_MS = 150000; // 2.5 min — real call is 60–90 sec, leave h
 // trigger will fail-fast since AMD will reject the unreachable number.
 const SHOP_PHONES: Record<string, string> = {
   "CL-43941": "+16504921334", // Subaru — your test phone, the demo target
-  // Other rows can be wired up later if you want them all live
+  "CL-43698": "+16504921334", // Nissan Altima — same test phone, second live row
 };
 
 type Status =
@@ -110,7 +110,7 @@ function StatusPill({ status }: { status: Status }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 px-2 py-0.5 text-xs font-medium border rounded-full",
+        "inline-flex items-center justify-center gap-1.5 px-2 py-0.5 text-xs font-medium border rounded-full min-w-[112px]",
         STATUS_CLASS[status]
       )}
     >
@@ -315,11 +315,11 @@ const Index = () => {
               className="w-7 h-7 rounded flex items-center justify-center text-[11px] font-semibold text-white"
               style={{ backgroundColor: "hsl(var(--primary))" }}
             >
-              CC
+              PM
             </div>
-            <h1 className="text-sm font-semibold tracking-tight">ClaimCadence</h1>
+            <h1 className="text-sm font-semibold tracking-tight">Pacific Mutual Insurance</h1>
           </div>
-          <div className="text-xs text-zinc-500">Sarah Chen · Auto claims</div>
+          <div className="text-xs text-zinc-500">Krish Gujral · Auto claims</div>
         </div>
       </header>
 
@@ -365,7 +365,7 @@ const Index = () => {
                 <th className="text-left px-4 py-2.5 text-xs uppercase tracking-wide text-zinc-500 font-medium w-[16%]">
                   Last update
                 </th>
-                <th className="text-left px-4 py-2.5 text-xs uppercase tracking-wide text-zinc-500 font-medium w-[15%]">
+                <th className="text-center px-4 py-2.5 text-xs uppercase tracking-wide text-zinc-500 font-medium w-[15%]">
                   Status
                 </th>
                 <th className="text-right px-4 py-2.5 text-xs uppercase tracking-wide text-zinc-500 font-medium w-[19%]">
@@ -419,7 +419,7 @@ const Index = () => {
                     <td className={cn("px-4 py-3 align-middle text-sm", lastUpdateClass)}>
                       {lastUpdateText}
                     </td>
-                    <td className="px-4 py-3 align-middle">
+                    <td className="px-4 py-3 align-middle text-center">
                       <StatusPill status={isCalling ? "calling_now" : c.status} />
                     </td>
                     <td className="px-4 py-3 align-middle text-right">
@@ -546,7 +546,7 @@ function DrillDown({ claim, onClose }: { claim: Claim; onClose: () => void }) {
               {isCamry ? "5/3 at 10:42 AM" : useLive ? "Just now" : "Today"}
             </div>
             <div className="font-mono text-xs text-zinc-500 mb-3">
-              AI assistant on behalf of Sarah Chen
+              AI assistant on behalf of Krish Gujral
             </div>
             {isCamry && !useLive ? (
               <p className="text-sm text-zinc-800 leading-relaxed">
