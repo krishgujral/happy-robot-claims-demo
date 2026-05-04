@@ -89,13 +89,14 @@ export default async function handler(req: Request): Promise<Response> {
     );
     if (outRes.ok) {
       const outBody = await outRes.json();
-      extracted =
+      const rawExtracted =
         outBody?.response ||
         outBody?.data?.response ||
         outBody?.output?.response ||
         outBody?.payload?.response ||
         outBody?.data ||
         outBody;
+      extracted = coerceExtracted(rawExtracted);
     }
   }
 
@@ -133,6 +134,32 @@ function json(payload: unknown, status: number): Response {
     status,
     headers: { "Content-Type": "application/json", ...corsHeaders() },
   });
+}
+
+// LLM extract emits booleans/numbers as strings ("true", "70"). Coerce so the
+// React types in LatestCall (Index.tsx) actually match what we send.
+function coerceExtracted(raw: any): Record<string, unknown> | null {
+  if (!raw || typeof raw !== "object") return null;
+  const out: Record<string, unknown> = { ...raw };
+
+  for (const k of ["checked_in", "teardown_complete", "supplement_needed"]) {
+    const v = out[k];
+    if (typeof v === "string") {
+      const t = v.trim().toLowerCase();
+      if (t === "true") out[k] = true;
+      else if (t === "false") out[k] = false;
+    }
+  }
+
+  for (const k of ["supplement_amount_usd", "percent_complete"]) {
+    const v = out[k];
+    if (typeof v === "string" && v.trim() !== "") {
+      const n = Number(v.replace(/[$,%\s]/g, ""));
+      if (!Number.isNaN(n)) out[k] = n;
+    }
+  }
+
+  return out;
 }
 
 function corsHeaders(): Record<string, string> {
