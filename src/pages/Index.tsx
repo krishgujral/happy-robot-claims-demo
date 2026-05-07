@@ -20,8 +20,8 @@ const POLL_TIMEOUT_MS = 150000; // 2.5 min — real call is 60–90 sec, leave h
 // The others use a placeholder; if MOCK_MODE is false and you click them, the
 // trigger will fail-fast since AMD will reject the unreachable number.
 const SHOP_PHONES: Record<string, string> = {
-  "CL-43941": "+16504921334", // Subaru — your test phone, the demo target
-  "CL-43698": "+16504921334", // Nissan Altima — same test phone, second live row
+  "CL-43941": "+16503970855", // Subaru — your test phone, the demo target
+  "CL-43698": "+16503970855", // Nissan Altima — same test phone, second live row
 };
 
 type Status =
