@@ -16,12 +16,13 @@ const MOCK_CALL_DURATION_MS = 12000;
 const POLL_INTERVAL_MS = 3000;
 const POLL_TIMEOUT_MS = 150000; // 2.5 min — real call is 60–90 sec, leave headroom
 
-// Shop phone numbers — only the Subaru is wired to a real number for the demo.
-// The others use a placeholder; if MOCK_MODE is false and you click them, the
-// trigger will fail-fast since AMD will reject the unreachable number.
+// Shop phone numbers — all live demo rows wired to the same test phone.
 const SHOP_PHONES: Record<string, string> = {
-  "CL-43941": "+16503970855", // Subaru — your test phone, the demo target
-  "CL-43698": "+16503970855", // Nissan Altima — same test phone, second live row
+  "CL-43941": "+16503970855", // Subaru Outback
+  "CL-43698": "+16503970855", // Nissan Altima
+  "CL-43622": "+16503970855", // Kia Sorento
+  "CL-43544": "+16503970855", // Lexus RX 350
+  "CL-43460": "+16503970855", // Jeep Grand Cherokee
 };
 
 type Status =
