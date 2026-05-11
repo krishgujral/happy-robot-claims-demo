@@ -59,17 +59,283 @@ type Claim = {
   in_inbox: boolean;
   supplement_amount?: number;
   latest_call?: LatestCall;
+  default_extracted?: Array<[string, string, boolean?]>;
+  default_note?: string;
 };
 
 const SEED_CLAIMS: Claim[] = [
-  { claim_id: "CL-44106", ro_number: "RO-284756", vehicle: "2019 Toyota Camry", shop: "Westside Collision", service_writer: "David", last_update: "Just now", status: "flagged", supplement_amount: 1200, in_inbox: true },
-  { claim_id: "CL-43941", ro_number: "RO-283901", vehicle: "2020 Subaru Outback", shop: "Coastline Body Shop", service_writer: "Jess", last_update: "4 days ago", status: "stale", in_inbox: true },
-  { claim_id: "CL-43987", ro_number: "RO-284012", vehicle: "2021 Ford F-150", shop: "Premier Auto Repair", service_writer: "Mike", last_update: "2 hrs ago", status: "on_track", in_inbox: false },
-  { claim_id: "CL-43702", ro_number: "RO-283455", vehicle: "2023 Tesla Model Y", shop: "Riverside Body & Paint", service_writer: "Tony", last_update: "1 hr ago", status: "on_track", in_inbox: false },
-  { claim_id: "CL-43850", ro_number: "RO-283788", vehicle: "2022 Honda Civic", shop: "AutoNation Collision", service_writer: "Carlos", last_update: "6 hrs ago", status: "parts_delayed", in_inbox: true },
-  { claim_id: "CL-44012", ro_number: "RO-284601", vehicle: "2021 Chevy Silverado", shop: "Maaco", service_writer: "Brian", last_update: "1 day ago", status: "exception", in_inbox: true },
-  { claim_id: "CL-43775", ro_number: "RO-283612", vehicle: "2022 Hyundai Tucson", shop: "Caliber Collision", service_writer: "Linda", last_update: "3 hrs ago", status: "on_track", in_inbox: false },
-  { claim_id: "CL-43698", ro_number: "RO-283399", vehicle: "2020 Nissan Altima", shop: "Service King", service_writer: "Eduardo", last_update: "5 days ago", status: "stale", in_inbox: true },
+  { claim_id: "CL-44106", ro_number: "RO-284756", vehicle: "2019 Toyota Camry", shop: "Westside Collision", service_writer: "David", last_update: "Just now", status: callStatusToUiStatus("supplement_needed"), supplement_amount: 1200, in_inbox: true },
+  { claim_id: "CL-43941", ro_number: "RO-283901", vehicle: "2020 Subaru Outback", shop: "Coastline Body Shop", service_writer: "Jess", last_update: "4 days ago", status: callStatusToUiStatus("stale"), in_inbox: true },
+  {
+    claim_id: "CL-43987", ro_number: "RO-284012", vehicle: "2021 Ford F-150", shop: "Premier Auto Repair", service_writer: "Mike", last_update: "2 hrs ago", status: callStatusToUiStatus("on_track"), in_inbox: false,
+    default_extracted: [
+      ["Checked in", "5/1"],
+      ["Teardown", "Complete"],
+      ["Parts status", "All received"],
+      ["Parts ETA", "5/3 (delivered)"],
+      ["Supplement", "None"],
+      ["Percent complete", "65%"],
+      ["Target completion", "5/13"],
+      ["Spoke with", "Mike (service writer)"],
+    ],
+    default_note: "Spoke with Mike at Premier Auto Repair regarding 2021 Ford F-150. Vehicle checked in 5/1, teardown complete, all parts received and installed. Repair 65% complete. Target completion 5/13. No issues reported.",
+  },
+  {
+    claim_id: "CL-43702", ro_number: "RO-283455", vehicle: "2023 Tesla Model Y", shop: "Riverside Body & Paint", service_writer: "Tony", last_update: "1 hr ago", status: callStatusToUiStatus("on_track"), in_inbox: false,
+    default_extracted: [
+      ["Checked in", "4/22"],
+      ["Teardown", "Complete"],
+      ["Parts status", "All received"],
+      ["Parts ETA", "4/29 (delivered)"],
+      ["Supplement", "None"],
+      ["Percent complete", "85%"],
+      ["Target completion", "5/11 (post ADAS calibration)"],
+      ["Spoke with", "Tony (service writer)"],
+    ],
+    default_note: "Spoke with Tony at Riverside Body & Paint regarding 2023 Tesla Model Y. Vehicle checked in 4/22, repair 85% complete. Awaiting ADAS calibration appointment scheduled for 5/10. Target delivery 5/11. No issues.",
+  },
+  {
+    claim_id: "CL-43850", ro_number: "RO-283788", vehicle: "2022 Honda Civic", shop: "AutoNation Collision", service_writer: "Carlos", last_update: "6 hrs ago", status: callStatusToUiStatus("parts_delayed"), in_inbox: true,
+    default_extracted: [
+      ["Checked in", "4/26"],
+      ["Teardown", "Complete"],
+      ["Parts status", "Backordered (rear bumper cover)"],
+      ["Parts ETA", "5/14"],
+      ["Supplement", "None"],
+      ["Percent complete", "50%"],
+      ["Target completion", "5/17"],
+      ["Spoke with", "Carlos (service writer)"],
+    ],
+    default_note: "Spoke with Carlos at AutoNation Collision regarding 2022 Honda Civic. Vehicle checked in 4/26, teardown complete. Rear bumper cover backordered from Honda — revised ETA 5/14, originally promised 5/3. Repair 50% complete. New target completion 5/17.",
+  },
+  {
+    claim_id: "CL-44012", ro_number: "RO-284601", vehicle: "2021 Chevy Silverado", shop: "Maaco", service_writer: "Brian", last_update: "1 day ago", status: callStatusToUiStatus("exception"), in_inbox: true,
+    default_extracted: [
+      ["Checked in", "4/30"],
+      ["Teardown", "Not started — hold for inspection"],
+      ["Parts status", "Not yet ordered"],
+      ["Parts ETA", "TBD"],
+      ["Supplement", "Possible — frame damage suspected"],
+      ["Percent complete", "5%"],
+      ["Target completion", "TBD"],
+      ["Spoke with", "Brian (service writer)"],
+    ],
+    default_note: "Spoke with Brian at Maaco regarding 2021 Chevy Silverado. Vehicle checked in 4/30. Shop has placed teardown on hold pending re-inspection — frame rail damage suspected beyond original estimate scope. Parts not yet ordered. Action required: schedule re-inspection and authorize expanded scope.",
+  },
+  {
+    claim_id: "CL-43775", ro_number: "RO-283612", vehicle: "2022 Hyundai Tucson", shop: "Caliber Collision", service_writer: "Linda", last_update: "3 hrs ago", status: callStatusToUiStatus("on_track"), in_inbox: false,
+    default_extracted: [
+      ["Checked in", "5/5"],
+      ["Teardown", "Complete"],
+      ["Parts status", "Partial — 4 of 6 received"],
+      ["Parts ETA", "5/10"],
+      ["Supplement", "None"],
+      ["Percent complete", "35%"],
+      ["Target completion", "5/14"],
+      ["Spoke with", "Linda (service writer)"],
+    ],
+    default_note: "Spoke with Linda at Caliber Collision regarding 2022 Hyundai Tucson. Vehicle checked in 5/5, teardown complete. 4 of 6 parts received; remaining parts ETA 5/10. Repair 35% complete. Target completion 5/14.",
+  },
+  { claim_id: "CL-43698", ro_number: "RO-283399", vehicle: "2020 Nissan Altima", shop: "Service King", service_writer: "Eduardo", last_update: "5 days ago", status: callStatusToUiStatus("stale"), in_inbox: true },
+  {
+    claim_id: "CL-44201", ro_number: "RO-285012", vehicle: "2022 Mazda CX-5", shop: "Gerber Collision", service_writer: "Maria", last_update: "Just now", status: callStatusToUiStatus("supplement_needed"), supplement_amount: 850, in_inbox: true,
+    default_extracted: [
+      ["Checked in", "5/6"],
+      ["Teardown", "Complete"],
+      ["Parts status", "Headlight assembly ordered"],
+      ["Parts ETA", "5/14"],
+      ["Supplement", "$850", true],
+      ["Percent complete", "35%"],
+      ["Target completion", "5/18"],
+      ["Spoke with", "Maria (service writer)"],
+    ],
+    default_note: "Spoke with Maria at Gerber Collision regarding 2022 Mazda CX-5. Vehicle checked in 5/6, teardown complete. Supplement identified: $850 for headlight assembly damage not visible at initial inspection. Parts on order, ETA 5/14. New target completion 5/18. Action required: supplement approval before parts ship.",
+  },
+  {
+    claim_id: "CL-44023", ro_number: "RO-284205", vehicle: "2022 Audi Q5", shop: "Fix Auto", service_writer: "Trevor", last_update: "30 min ago", status: callStatusToUiStatus("supplement_needed"), supplement_amount: 2400, in_inbox: true,
+    default_extracted: [
+      ["Checked in", "5/4"],
+      ["Teardown", "Complete"],
+      ["Parts status", "Awaiting supplement approval"],
+      ["Parts ETA", "Pending"],
+      ["Supplement", "$2,400", true],
+      ["Percent complete", "25%"],
+      ["Target completion", "5/22"],
+      ["Spoke with", "Trevor (service writer)"],
+    ],
+    default_note: "Spoke with Trevor at Fix Auto regarding 2022 Audi Q5. Vehicle checked in 5/4, teardown complete. Inner door panel damage and frame stiffener identified during disassembly — $2,400 supplement. Parts ordering held pending carrier approval. New target completion 5/22. Action required: supplement approval.",
+  },
+  {
+    claim_id: "CL-44089", ro_number: "RO-284423", vehicle: "2021 RAM 1500", shop: "Crash Champions", service_writer: "James", last_update: "5 hrs ago", status: callStatusToUiStatus("parts_delayed"), in_inbox: true,
+    default_extracted: [
+      ["Checked in", "5/2"],
+      ["Teardown", "Complete"],
+      ["Parts status", "Tailgate backordered (OEM only)"],
+      ["Parts ETA", "5/19"],
+      ["Supplement", "None"],
+      ["Percent complete", "55%"],
+      ["Target completion", "5/22"],
+      ["Spoke with", "James (service writer)"],
+    ],
+    default_note: "Spoke with James at Crash Champions regarding 2021 RAM 1500. Vehicle checked in 5/2, teardown complete. Tailgate on factory backorder (OEM only) — revised ETA 5/19, originally promised 5/8. Repair 55% complete. New target completion 5/22.",
+  },
+  {
+    claim_id: "CL-44156", ro_number: "RO-284812", vehicle: "2023 BMW X3", shop: "Classic Collision", service_writer: "Marcus", last_update: "12 hrs ago", status: callStatusToUiStatus("parts_delayed"), in_inbox: true,
+    default_extracted: [
+      ["Checked in", "4/28"],
+      ["Teardown", "Complete"],
+      ["Parts status", "Parking sensor backordered"],
+      ["Parts ETA", "5/16"],
+      ["Supplement", "None"],
+      ["Percent complete", "60%"],
+      ["Target completion", "5/19"],
+      ["Spoke with", "Marcus (service writer)"],
+    ],
+    default_note: "Spoke with Marcus at Classic Collision regarding 2023 BMW X3. Vehicle checked in 4/28, teardown complete. Front bumper parking sensor on factory backorder from BMW NA — ETA 5/16. Bumper paint and prep complete; awaiting sensor install. New target completion 5/19.",
+  },
+  {
+    claim_id: "CL-43911", ro_number: "RO-283845", vehicle: "2020 Dodge Charger", shop: "ABRA Auto Body", service_writer: "Aisha", last_update: "1 day ago", status: callStatusToUiStatus("parts_delayed"), in_inbox: true,
+    default_extracted: [
+      ["Checked in", "4/25"],
+      ["Teardown", "Complete"],
+      ["Parts status", "Quarter panel out of stock (regional)"],
+      ["Parts ETA", "5/15"],
+      ["Supplement", "None"],
+      ["Percent complete", "50%"],
+      ["Target completion", "5/20"],
+      ["Spoke with", "Aisha (service writer)"],
+    ],
+    default_note: "Spoke with Aisha at ABRA Auto Body regarding 2020 Dodge Charger. Vehicle checked in 4/25, teardown complete. Driver-side quarter panel out of stock at regional warehouse — sourcing from East Coast hub, ETA 5/15. Repair 50% complete. New target completion 5/20.",
+  },
+  {
+    claim_id: "CL-44178", ro_number: "RO-284901", vehicle: "2023 Acura MDX", shop: "Bayside Body Works", service_writer: "Yolanda", last_update: "Just now", status: callStatusToUiStatus("exception"), in_inbox: true,
+    default_extracted: [
+      ["Checked in", "5/8"],
+      ["Teardown", "Partial — halted"],
+      ["Parts status", "Not ordered — total loss review"],
+      ["Parts ETA", "N/A"],
+      ["Supplement", "Total loss assessment pending"],
+      ["Percent complete", "10%"],
+      ["Target completion", "Pending TL decision"],
+      ["Spoke with", "Yolanda (service writer)"],
+    ],
+    default_note: "Spoke with Yolanda at Bayside Body Works regarding 2023 Acura MDX. Vehicle checked in 5/8, teardown halted. Frame rail crush measured beyond repairable threshold — shop has paused work pending total loss assessment. Action required: dispatch TL adjuster to inspect within 24 hrs.",
+  },
+  { claim_id: "CL-43622", ro_number: "RO-283156", vehicle: "2020 Kia Sorento", shop: "Pacific Auto Body", service_writer: "Sofia", last_update: "3 days ago", status: callStatusToUiStatus("stale"), in_inbox: true },
+  { claim_id: "CL-43544", ro_number: "RO-283022", vehicle: "2019 Lexus RX 350", shop: "Joe Hudson's Collision", service_writer: "Diana", last_update: "6 days ago", status: callStatusToUiStatus("stale"), in_inbox: true },
+  { claim_id: "CL-43460", ro_number: "RO-282988", vehicle: "2021 Jeep Grand Cherokee", shop: "CARSTAR", service_writer: "Vincent", last_update: "7 days ago", status: callStatusToUiStatus("stale"), in_inbox: true },
+  {
+    claim_id: "CL-44245", ro_number: "RO-285101", vehicle: "2019 GMC Sierra", shop: "Elite Collision", service_writer: "Tara", last_update: "5 hrs ago", status: callStatusToUiStatus("on_track"), in_inbox: false,
+    default_extracted: [
+      ["Checked in", "5/1"],
+      ["Teardown", "Complete"],
+      ["Parts status", "All received"],
+      ["Parts ETA", "5/3 (delivered)"],
+      ["Supplement", "None"],
+      ["Percent complete", "75%"],
+      ["Target completion", "5/15"],
+      ["Spoke with", "Tara (service writer)"],
+    ],
+    default_note: "Spoke with Tara at Elite Collision regarding 2019 GMC Sierra. Vehicle checked in 5/1, teardown complete, all parts received. Bedside replacement complete; paint cure in progress. Repair 75% complete. Target completion 5/15.",
+  },
+  {
+    claim_id: "CL-44210", ro_number: "RO-285045", vehicle: "2023 Genesis G70", shop: "Auto Tech Repair", service_writer: "Devon", last_update: "30 min ago", status: callStatusToUiStatus("on_track"), in_inbox: false,
+    default_extracted: [
+      ["Checked in", "4/29"],
+      ["Teardown", "Complete"],
+      ["Parts status", "All received"],
+      ["Parts ETA", "5/2 (delivered early)"],
+      ["Supplement", "None"],
+      ["Percent complete", "90%"],
+      ["Target completion", "5/13"],
+      ["Spoke with", "Devon (service writer)"],
+    ],
+    default_note: "Spoke with Devon at Auto Tech Repair regarding 2023 Genesis G70. Vehicle checked in 4/29, teardown complete. All parts received ahead of schedule. Final QC and detail scheduled for 5/12. Target completion 5/13.",
+  },
+  {
+    claim_id: "CL-44132", ro_number: "RO-284667", vehicle: "2021 Volkswagen Jetta", shop: "Mike's Auto Body", service_writer: "Greg", last_update: "2 hrs ago", status: callStatusToUiStatus("on_track"), in_inbox: false,
+    default_extracted: [
+      ["Checked in", "5/3"],
+      ["Teardown", "Complete"],
+      ["Parts status", "All received"],
+      ["Parts ETA", "5/5 (delivered)"],
+      ["Supplement", "None"],
+      ["Percent complete", "60%"],
+      ["Target completion", "5/14"],
+      ["Spoke with", "Greg (service writer)"],
+    ],
+    default_note: "Spoke with Greg at Mike's Auto Body regarding 2021 Volkswagen Jetta. Vehicle checked in 5/3, teardown complete. Bumper cover painted; awaiting reassembly. Repair 60% complete. Target completion 5/14.",
+  },
+  {
+    claim_id: "CL-44067", ro_number: "RO-284344", vehicle: "2022 Volvo XC60", shop: "Apex Auto Repair", service_writer: "Priya", last_update: "4 hrs ago", status: callStatusToUiStatus("on_track"), in_inbox: false,
+    default_extracted: [
+      ["Checked in", "4/30"],
+      ["Teardown", "Complete"],
+      ["Parts status", "All received"],
+      ["Parts ETA", "5/2 (delivered)"],
+      ["Supplement", "None"],
+      ["Percent complete", "80%"],
+      ["Target completion", "5/12"],
+      ["Spoke with", "Priya (service writer)"],
+    ],
+    default_note: "Spoke with Priya at Apex Auto Repair regarding 2022 Volvo XC60. Vehicle checked in 4/30, teardown complete. Front-end alignment complete; awaiting headlight aim adjustment. Repair 80% complete. Target completion 5/12.",
+  },
+  {
+    claim_id: "CL-44045", ro_number: "RO-284289", vehicle: "2021 Mini Cooper", shop: "Bayside Body Works", service_writer: "Sergio", last_update: "3 hrs ago", status: callStatusToUiStatus("on_track"), in_inbox: false,
+    default_extracted: [
+      ["Checked in", "5/4"],
+      ["Teardown", "Complete"],
+      ["Parts status", "All received"],
+      ["Parts ETA", "5/6 (delivered)"],
+      ["Supplement", "None"],
+      ["Percent complete", "45%"],
+      ["Target completion", "5/16"],
+      ["Spoke with", "Sergio (service writer)"],
+    ],
+    default_note: "Spoke with Sergio at Bayside Body Works regarding 2021 Mini Cooper. Vehicle checked in 5/4, teardown complete. Door skin replacement underway; trim refit next. Repair 45% complete. Target completion 5/16.",
+  },
+  {
+    claim_id: "CL-43998", ro_number: "RO-284088", vehicle: "2020 Mercedes GLC", shop: "Sunrise Collision", service_writer: "Marco", last_update: "1 hr ago", status: callStatusToUiStatus("on_track"), in_inbox: false,
+    default_extracted: [
+      ["Checked in", "4/26"],
+      ["Teardown", "Complete"],
+      ["Parts status", "All received"],
+      ["Parts ETA", "4/29 (delivered)"],
+      ["Supplement", "None"],
+      ["Percent complete", "92%"],
+      ["Target completion", "5/11"],
+      ["Spoke with", "Marco (service writer)"],
+    ],
+    default_note: "Spoke with Marco at Sunrise Collision regarding 2020 Mercedes GLC. Vehicle checked in 4/26, teardown complete. Paint blending complete; pre-delivery inspection scheduled for 5/10. Target delivery 5/11. No issues.",
+  },
+  {
+    claim_id: "CL-43887", ro_number: "RO-283755", vehicle: "2022 Infiniti QX50", shop: "Express Collision", service_writer: "Renee", last_update: "6 hrs ago", status: callStatusToUiStatus("on_track"), in_inbox: false,
+    default_extracted: [
+      ["Checked in", "5/2"],
+      ["Teardown", "Complete"],
+      ["Parts status", "All received"],
+      ["Parts ETA", "5/4 (delivered)"],
+      ["Supplement", "None"],
+      ["Percent complete", "70%"],
+      ["Target completion", "5/15"],
+      ["Spoke with", "Renee (service writer)"],
+    ],
+    default_note: "Spoke with Renee at Express Collision regarding 2022 Infiniti QX50. Vehicle checked in 5/2, teardown complete. Tailgate replacement complete; rear glass install scheduled for 5/12. Repair 70% complete. Target completion 5/15.",
+  },
+  {
+    claim_id: "CL-43733", ro_number: "RO-283566", vehicle: "2020 Buick Encore", shop: "CARSTAR", service_writer: "Lisa", last_update: "8 hrs ago", status: callStatusToUiStatus("on_track"), in_inbox: false,
+    default_extracted: [
+      ["Checked in", "5/1"],
+      ["Teardown", "Complete"],
+      ["Parts status", "All received"],
+      ["Parts ETA", "5/3 (delivered)"],
+      ["Supplement", "None"],
+      ["Percent complete", "70%"],
+      ["Target completion", "5/14"],
+      ["Spoke with", "Lisa (service writer)"],
+    ],
+    default_note: "Spoke with Lisa at CARSTAR regarding 2020 Buick Encore. Vehicle checked in 5/1, teardown complete, all parts received. Body work 70% complete; paint stage next. Target completion 5/14.",
+  },
 ];
 
 const STATUS_LABEL: Record<Status, string> = {
@@ -101,6 +367,8 @@ function callStatusToUiStatus(s: string | undefined): Status {
       return "parts_delayed";
     case "exception":
       return "exception";
+    case "stale":
+      return "stale";
     default:
       return "on_track";
   }
@@ -573,8 +841,8 @@ function DrillDown({ claim, onClose }: { claim: Claim; onClose: () => void }) {
               </p>
             ) : (
               <p className="text-sm text-zinc-800 leading-relaxed">
-                Spoke with {claim.service_writer} at {claim.shop} regarding {claim.vehicle}.
-                Repair progressing per estimate. No new issues reported.
+                {claim.default_note ??
+                  `Spoke with ${claim.service_writer} at ${claim.shop} regarding ${claim.vehicle}. Repair progressing per estimate. No new issues reported.`}
               </p>
             )}
           </div>
@@ -619,12 +887,7 @@ function DrillDown({ claim, onClose }: { claim: Claim; onClose: () => void }) {
                   ["Spoke with", live!.spoke_with || claim.service_writer],
                 ];
               } else {
-                rows = [
-                  ["Shop", claim.shop],
-                  ["Spoke with", claim.service_writer],
-                  ["Last update", claim.last_update],
-                  ["Status", STATUS_LABEL[claim.status]],
-                ];
+                rows = claim.default_extracted ?? [];
               }
               return rows.map(([label, value, highlight]) => (
                 <div
