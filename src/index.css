@@ -13,10 +13,15 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 10%;
 
-    /* Copper primary */
-    --primary: 17 74% 44%;
+    /* Allstate blue primary */
+    --primary: 218 100% 33%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 17 74% 38%;
+    --primary-hover: 218 100% 26%;
+
+    /* Allstate coral CTA */
+    --cta: 13 80% 62%;
+    --cta-foreground: 0 0% 100%;
+    --cta-hover: 13 70% 52%;
 
     --secondary: 240 5% 96%;
     --secondary-foreground: 240 10% 10%;
@@ -32,7 +37,7 @@
 
     --border: 240 6% 90%;
     --input: 240 6% 90%;
-    --ring: 17 74% 44%;
+    --ring: 218 100% 33%;
 
     --radius: 0.375rem;
 

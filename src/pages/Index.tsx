@@ -508,7 +508,7 @@ const Index = () => {
           shop_name: claim.shop,
           customer_vehicle: claim.vehicle,
           service_writer_name: claim.service_writer,
-          carrier_name: "Pacific Mutual Insurance",
+          carrier_name: "Allstate Insurance",
         }),
       });
       if (!res.ok) {
@@ -579,14 +579,14 @@ const Index = () => {
     <div className="min-h-screen bg-white text-zinc-900">
       <header className="border-b border-zinc-200 bg-white">
         <div className="max-w-7xl mx-auto px-8 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-7 h-7 rounded flex items-center justify-center text-[11px] font-semibold text-white"
-              style={{ backgroundColor: "hsl(var(--primary))" }}
+          <div className="flex items-baseline gap-1.5">
+            <span
+              className="text-base font-bold tracking-tight"
+              style={{ color: "hsl(var(--primary))" }}
             >
-              PM
-            </div>
-            <h1 className="text-sm font-semibold tracking-tight">Pacific Mutual Insurance</h1>
+              Allstate
+            </span>
+            <span className="text-sm font-medium text-zinc-600 tracking-tight">Insurance</span>
           </div>
           <div className="text-xs text-zinc-500">Krish Gujral · Auto claims</div>
         </div>
@@ -700,13 +700,13 @@ const Index = () => {
                         <button
                           onClick={() => handleTrigger(c.claim_id)}
                           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white rounded-md transition-colors"
-                          style={{ backgroundColor: "hsl(var(--primary))" }}
+                          style={{ backgroundColor: "hsl(var(--cta))" }}
                           onMouseEnter={(e) =>
                             (e.currentTarget.style.backgroundColor =
-                              "hsl(var(--primary-hover))")
+                              "hsl(var(--cta-hover))")
                           }
                           onMouseLeave={(e) =>
-                            (e.currentTarget.style.backgroundColor = "hsl(var(--primary))")
+                            (e.currentTarget.style.backgroundColor = "hsl(var(--cta))")
                           }
                         >
                           <Phone className="w-3 h-3" />
@@ -782,12 +782,12 @@ function DrillDown({ claim, onClose }: { claim: Claim; onClose: () => void }) {
                   })
                 }
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white rounded-md transition-colors whitespace-nowrap"
-                style={{ backgroundColor: "hsl(var(--primary))" }}
+                style={{ backgroundColor: "hsl(var(--cta))" }}
                 onMouseEnter={(e) =>
-                  (e.currentTarget.style.backgroundColor = "hsl(var(--primary-hover))")
+                  (e.currentTarget.style.backgroundColor = "hsl(var(--cta-hover))")
                 }
                 onMouseLeave={(e) =>
-                  (e.currentTarget.style.backgroundColor = "hsl(var(--primary))")
+                  (e.currentTarget.style.backgroundColor = "hsl(var(--cta))")
                 }
               >
                 <Check className="w-3 h-3" />
